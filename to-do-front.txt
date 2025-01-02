@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .task {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .task.completed {
+      text-decoration: line-through;
+      background-color: #f0f0f0;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>To-Do List</h1>
+  <input type="text" id="task-input" placeholder="Enter a new task" />
+  <button onclick="addTask()">Add Task</button>
+  <div id="task-list"></div>
+
+  <script>
+    const API_URL = 'http://127.0.0.1:5000/tasks';
+
+    async function fetchTasks() {
+      const response = await fetch(API_URL);
+      const tasks = await response.json();
+      displayTasks(tasks);
+    }
+
+    async function addTask() {
+      const taskInput = document.getElementById('task-input');
+      const task = taskInput.value;
+      if (!task) return alert('Task cannot be empty!');
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task }),
+      });
+      if (response.ok) {
+        taskInput.value = '';
+        fetchTasks();
+      }
+    }
+
+    async function toggleTask(taskId, completed) {
+      await fetch(${API_URL}/${taskId}, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed }),
+      });
+      fetchTasks();
+    }
+
+    async function deleteTask(taskId) {
+      await fetch(${API_URL}/${taskId}, { method: 'DELETE' });
+      fetchTasks();
+    }
+
+    function displayTasks(tasks) {
+      const taskList = document.getElementById('task-list');
+      taskList.innerHTML = '';
+      tasks.forEach(task => {
+        const taskDiv = document.createElement('div');
+        taskDiv.className = task ${task.completed ? 'completed' : ''};
+        taskDiv.innerHTML = `
+          <span>${task.task}</span>
+          <div>
+            <button onclick="toggleTask(${task.id}, ${!task.completed})">
+              ${task.completed ? 'Undo' : 'Complete'}
+            </button>
+            <button onclick="deleteTask(${task.id})">Delete</button>
+          </div>
+        `;
+        taskList.appendChild(taskDiv);
+      });
+    }
+
+    // Fetch tasks on load
+    fetchTasks();
+  </script>
+</body>
+</html>
